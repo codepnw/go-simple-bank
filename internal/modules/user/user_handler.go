@@ -36,7 +36,7 @@ func (h *userHandler) GetUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 	idInt, _ := strconv.ParseInt(id, 10, 64)
 
-	user, err := h.uc.GetUser(ctx, idInt)
+	user, err := h.uc.GetUserByID(ctx, idInt)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

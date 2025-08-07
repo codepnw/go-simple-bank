@@ -3,13 +3,16 @@ package user
 import (
 	"context"
 	"time"
+
+	"github.com/codepnw/simple-bank/internal/utils/security"
 )
 
 const queryTimeout = time.Second * 5
 
 type UserUsecase interface {
 	Create(ctx context.Context, req *UserRequest) (*User, error)
-	GetUser(ctx context.Context, id int64) (*User, error)
+	GetUserByID(ctx context.Context, id int64) (*User, error)
+	GetUserByEmail(ctx context.Context, email string) (*User, error)
 	GetUsers(ctx context.Context) ([]*User, error)
 	Update(ctx context.Context, id int64, req *UserUpdateRequest) (*User, error)
 	Delete(ctx context.Context, id int64) error
@@ -27,9 +30,14 @@ func (uc *userUsecase) Create(ctx context.Context, req *UserRequest) (*User, err
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
+	hashPassword, err := security.HashPassword(req.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &User{
 		Email:     req.Email,
-		Password:  req.Password, // TODO: hash later
+		Password:  hashPassword,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Phone:     req.Phone,
@@ -43,11 +51,18 @@ func (uc *userUsecase) Create(ctx context.Context, req *UserRequest) (*User, err
 	return created, nil
 }
 
-func (uc *userUsecase) GetUser(ctx context.Context, id int64) (*User, error) {
+func (uc *userUsecase) GetUserByID(ctx context.Context, id int64) (*User, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
 	return uc.repo.FindByID(ctx, id)
+}
+
+func (uc *userUsecase) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
+	defer cancel()
+
+	return uc.repo.FindByEmail(ctx, email)
 }
 
 func (uc *userUsecase) GetUsers(ctx context.Context) ([]*User, error) {
