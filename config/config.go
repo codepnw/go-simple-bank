@@ -9,6 +9,7 @@ import (
 type EnvConfig struct {
 	APP *app
 	DB  *db
+	JWT *jwt
 }
 
 type db struct {
@@ -23,6 +24,11 @@ type db struct {
 type app struct {
 	Version string
 	Port    string
+}
+
+type jwt struct {
+	SecretKey  string
+	RefreshKey string
 }
 
 func LoadEnvConfig(configFile string) (*EnvConfig, error) {
@@ -42,6 +48,10 @@ func LoadEnvConfig(configFile string) (*EnvConfig, error) {
 			Host: getEnvString("POSTGRES_HOST", "localhost"),
 			Port: getEnvString("POSTGRES_PORT", "5432"),
 			SSL:  getEnvString("POSTGRES_SSL", "disable"),
+		},
+		JWT: &jwt{
+			SecretKey:  getEnvString("JWT_SECRET_KEY", "my-secret-123"),
+			RefreshKey: getEnvString("JWT_REFRESH_KEY", "my-refresh-123"),
 		},
 	}
 
