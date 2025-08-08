@@ -2,8 +2,10 @@ package auth
 
 import (
 	"context"
+	"log"
 	"time"
 
+	"github.com/codepnw/simple-bank/config"
 	"github.com/codepnw/simple-bank/internal/modules/user"
 	"github.com/codepnw/simple-bank/internal/utils/security"
 )
@@ -20,8 +22,11 @@ type authUsecase struct {
 	jwt         *security.Token
 }
 
-func NewAuthUsecase(userUsecase user.UserUsecase, jwt *security.Token) AuthUsecase {
-	return &authUsecase{userUsecase: userUsecase}
+func NewAuthUsecase(cfg *config.EnvConfig, userUsecase user.UserUsecase) AuthUsecase {
+	return &authUsecase{
+		userUsecase: userUsecase,
+		jwt:         security.InitJWT(cfg),
+	}
 }
 
 func (uc *authUsecase) Login(ctx context.Context, req *authRequest) (*JWTTokenResponse, error) {
@@ -70,6 +75,7 @@ func (uc *authUsecase) Register(ctx context.Context, req *user.UserRequest) (*JW
 
 func (uc *authUsecase) jwtTokenResponse(user *security.TokenUser) (*JWTTokenResponse, error) {
 	accessToken, err := uc.jwt.GenerateAccessToken(user)
+	log.Println("acc", accessToken)
 	if err != nil {
 		return nil, err
 	}
