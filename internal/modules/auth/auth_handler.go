@@ -1,9 +1,8 @@
 package auth
 
 import (
-	"net/http"
-
 	"github.com/codepnw/simple-bank/internal/modules/user"
+	"github.com/codepnw/simple-bank/internal/utils/response"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,32 +18,32 @@ func (h *authHandler) Login(ctx *gin.Context) {
 	req := new(authRequest)
 
 	if err := ctx.ShouldBindJSON(req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		response.ErrBadRequest(ctx, err)
 		return
 	}
 
-	response, err := h.uc.Login(ctx, req)
+	result, err := h.uc.Login(ctx, req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.ErrInternalServer(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": response})
+	response.Success(ctx, result)
 }
 
 func (h *authHandler) Register(ctx *gin.Context) {
 	req := new(user.UserRequest)
 
 	if err := ctx.ShouldBindJSON(req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		response.ErrBadRequest(ctx, err)
 		return
 	}
 
-	response, err := h.uc.Register(ctx, req)
+	result, err := h.uc.Register(ctx, req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.ErrInternalServer(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"data": response})
+	response.Created(ctx, result)
 }

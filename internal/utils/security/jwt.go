@@ -16,28 +16,40 @@ type TokenUser struct {
 }
 
 type Token struct {
-	cfg config.EnvConfig
+	cfg *config.EnvConfig
 }
 
-func InitJWT(cfg config.EnvConfig) *Token {
+func InitJWT(cfg *config.EnvConfig) *Token {
 	return &Token{cfg: cfg}
 }
 
 func (t *Token) GenerateAccessToken(user *TokenUser) (string, error) {
+	if t == nil {
+		return "", errors.New("token struct is nil")
+	}
 	exp := time.Hour * 24
 	return t.generateToken(t.cfg.JWT.SecretKey, exp, user)
 }
 
 func (t *Token) GenerateRefreshToken(user *TokenUser) (string, error) {
+	if t == nil {
+		return "", errors.New("token struct is nil")
+	}
 	exp := time.Hour * 24 * 7
 	return t.generateToken(t.cfg.JWT.RefreshKey, exp, user)
 }
 
 func (t *Token) VerifyAccessToken(token string) (*TokenUser, error) {
+	if t == nil {
+		return nil, errors.New("token struct is nil")
+	}
 	return t.verifyToken(token, t.cfg.JWT.SecretKey)
 }
 
 func (t *Token) VerifyRefreshToken(token string) (*TokenUser, error) {
+	if t == nil {
+		return nil, errors.New("token struct is nil")
+	}
 	return t.verifyToken(token, t.cfg.JWT.RefreshKey)
 }
 
