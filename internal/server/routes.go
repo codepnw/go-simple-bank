@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/codepnw/simple-bank/config"
+	"github.com/codepnw/simple-bank/internal/modules/account"
 	"github.com/codepnw/simple-bank/internal/modules/auth"
 	"github.com/codepnw/simple-bank/internal/modules/user"
 	"github.com/gin-gonic/gin"
@@ -46,4 +47,19 @@ func (r *routeConfig) userRoutes() {
 	user.GET("/", userHandler.GetUsers)
 	user.PATCH("/", userHandler.UpdateUser)
 	user.DELETE("/", userHandler.DeleteUser)
+}
+
+func (r *routeConfig) accountRoutes() {
+	accRepo := account.NewAccountRepository(r.db)
+	accUsecase := account.NewAccountUsecse(accRepo)
+	accHandler := account.NewAccountHandler(accUsecase)
+
+	account := r.router.Group("/accounts")
+
+	account.POST("/", accHandler.CreateAccount)
+	account.GET("/", accHandler.ListAccounts)
+	account.GET("/:id", accHandler.GetAccountByID)
+	account.GET("/:id/pending", accHandler.UpdateStatusPending)
+	account.GET("/:id/approved", accHandler.UpdateStatusApproved)
+	account.GET("/:id/rejected", accHandler.UpdateStatusRejected)
 }
