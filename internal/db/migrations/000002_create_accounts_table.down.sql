@@ -1,1 +1,3 @@
+DROP TYPE account_status ON DELETE CASCADE;
+
 DROP TABLE IF EXISTS accounts;
