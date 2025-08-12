@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/codepnw/simple-bank/config"
+	"github.com/codepnw/simple-bank/internal/db"
 	"github.com/codepnw/simple-bank/internal/modules/account"
 	"github.com/codepnw/simple-bank/internal/modules/auth"
 	"github.com/codepnw/simple-bank/internal/modules/user"
@@ -13,6 +14,7 @@ import (
 type routeConfig struct {
 	router *gin.Engine
 	db     *sql.DB
+	tx     *db.Tx
 	cfg    *config.EnvConfig
 }
 
@@ -20,6 +22,7 @@ func setupRoutes(params *routeConfig) *routeConfig {
 	return &routeConfig{
 		router: params.router,
 		db:     params.db,
+		tx:     params.tx,
 		cfg:    params.cfg,
 	}
 }

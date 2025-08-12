@@ -9,17 +9,17 @@ const (
 )
 
 type DepositReq struct {
-	FromAccount int64   `json:"from_account"`
-	Amount      float64 `json:"amount"`
+	ToAccount int64   `json:"to_account" validate:"required"`
+	Amount    float64 `json:"amount" validate:"required,gt=0"`
 }
 
 type WithdrawReq struct {
-	ToAccount int64   `json:"to_account"`
-	Amount    float64 `json:"amount"`
+	FromAccount int64   `json:"from_account" validate:"required"`
+	Amount      float64 `json:"amount" validate:"required,gt=0"`
 }
 
 type TransferReq struct {
-	FromAccount int64   `json:"from_account"`
-	ToAccount   int64   `json:"to_account"`
-	Amount      float64 `json:"amount"`
+	FromAccount int64   `json:"from_account" validate:"required"`
+	ToAccount   int64   `json:"to_account" validate:"required"`
+	Amount      float64 `json:"amount" validate:"required,gt=0"`
 }

@@ -9,8 +9,12 @@ import (
 type AccountRepository interface {
 	Create(ctx context.Context, acc *Account) (*Account, error)
 	FindByID(ctx context.Context, id int64) (*Account, error)
+	FindByIDWithTx(ctx context.Context, tx *sql.Tx, id int64) (*Account, error)
 	List(ctx context.Context, userID int64) ([]*Account, error)
 	UpdateStatus(ctx context.Context, id int64, status string) error
+	UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, id int64, balance float64) error
+	GetAccountBalance(ctx context.Context, accountID int64) (float64, error)
+	GetAccountBalanceByUserID(ctx context.Context, accountID, userID int64) (float64, error)
 }
 
 type accountRepository struct {
@@ -52,6 +56,28 @@ func (r *accountRepository) FindByID(ctx context.Context, id int64) (*Account, e
 	acc := new(Account)
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&acc.ID,
+		&acc.UserID,
+		&acc.Name,
+		&acc.Balance,
+		&acc.Currency,
+		&acc.Status,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return acc, nil
+}
+
+func (r *accountRepository) FindByIDWithTx(ctx context.Context, tx *sql.Tx, id int64) (*Account, error) {
+	query := `
+		SELECT id, user_id, name, balance, currency, status
+		FROM accounts WHERE id = $1 LIMIT 1;
+	`
+	acc := new(Account)
+
+	err := tx.QueryRowContext(ctx, query, id).Scan(
 		&acc.ID,
 		&acc.UserID,
 		&acc.Name,
@@ -120,4 +146,48 @@ func (r *accountRepository) UpdateStatus(ctx context.Context, id int64, status s
 	}
 
 	return nil
+}
+
+func (r *accountRepository) UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, id int64, balance float64) error {
+	query := `UPDATE FROM accounts SET balance + $1 WHERE id = $2`
+
+	res, err := tx.ExecContext(ctx, query, balance, id)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return errors.New("account not found")
+	}
+
+	return nil
+}
+
+func (r *accountRepository) GetAccountBalance(ctx context.Context, accountID int64) (float64, error) {
+	var balance float64
+	query := `SELECT balance FROM accounts WHERE id = $1`
+
+	err := r.db.QueryRowContext(ctx, query, accountID).Scan(&balance)
+	if err != nil {
+		return 0, err
+	}
+
+	return balance, nil
+}
+
+func (r *accountRepository) GetAccountBalanceByUserID(ctx context.Context, accountID, userID int64) (float64, error) {
+	var balance float64
+	query := `SELECT balance FROM accounts WHERE id = $1 AND user_id = $2`
+
+	err := r.db.QueryRowContext(ctx, query, accountID, userID).Scan(&balance)
+	if err != nil {
+		return 0, err
+	}
+
+	return balance, nil
 }

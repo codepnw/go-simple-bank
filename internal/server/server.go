@@ -15,11 +15,14 @@ func Run(cfg *config.EnvConfig) error {
 	}
 
 	// Init Postgres DB
-	db, err := db.PostgresConnect(cfg)
+	pg, err := db.PostgresConnect(cfg)
 	if err != nil {
 		return fmt.Errorf("database connect failed: %w", err)
 	}
-	defer db.Close()
+	defer pg.Close()
+
+	// Init TX
+	tx := db.InitTx(pg)
 
 	// Init gin router
 	gin.SetMode(gin.ReleaseMode)
@@ -28,7 +31,8 @@ func Run(cfg *config.EnvConfig) error {
 	// Init Routes
 	routes := setupRoutes(&routeConfig{
 		router: r,
-		db:     db,
+		db:     pg,
+		tx:     tx,
 		cfg:    cfg,
 	})
 
