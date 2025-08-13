@@ -39,6 +39,7 @@ func Run(cfg *config.EnvConfig) error {
 	routes.authRoutes()
 	routes.userRoutes()
 	routes.accountRoutes()
+	routes.transactionRoutes()
 
 	return r.Run(cfg.APP.Port)
 }

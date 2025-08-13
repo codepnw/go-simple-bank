@@ -9,7 +9,6 @@ import (
 type AccountRepository interface {
 	Create(ctx context.Context, acc *Account) (*Account, error)
 	FindByID(ctx context.Context, id int64) (*Account, error)
-	FindByIDWithTx(ctx context.Context, tx *sql.Tx, id int64) (*Account, error)
 	List(ctx context.Context, userID int64) ([]*Account, error)
 	UpdateStatus(ctx context.Context, id int64, status string) error
 	UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, id int64, balance float64) error
@@ -56,28 +55,6 @@ func (r *accountRepository) FindByID(ctx context.Context, id int64) (*Account, e
 	acc := new(Account)
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&acc.ID,
-		&acc.UserID,
-		&acc.Name,
-		&acc.Balance,
-		&acc.Currency,
-		&acc.Status,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return acc, nil
-}
-
-func (r *accountRepository) FindByIDWithTx(ctx context.Context, tx *sql.Tx, id int64) (*Account, error) {
-	query := `
-		SELECT id, user_id, name, balance, currency, status
-		FROM accounts WHERE id = $1 LIMIT 1;
-	`
-	acc := new(Account)
-
-	err := tx.QueryRowContext(ctx, query, id).Scan(
 		&acc.ID,
 		&acc.UserID,
 		&acc.Name,
@@ -149,8 +126,10 @@ func (r *accountRepository) UpdateStatus(ctx context.Context, id int64, status s
 }
 
 func (r *accountRepository) UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, id int64, balance float64) error {
-	query := `UPDATE FROM accounts SET balance + $1 WHERE id = $2`
-
+	query := `
+		UPDATE FROM accounts SET balance = balance + $1 
+		WHERE id = $2 AND balance + $1 >= 0
+	`
 	res, err := tx.ExecContext(ctx, query, balance, id)
 	if err != nil {
 		return err

@@ -7,8 +7,8 @@ import (
 
 type TransasctionRepository interface {
 	DepositWithTx(ctx context.Context, tx *sql.Tx, input *Transaction) (*Transaction, error)
-	Withdraw(ctx context.Context, input *Transaction) (*Transaction, error)
-	Transfer(ctx context.Context, input *Transaction) (*Transaction, error)
+	WithdrawWithTx(ctx context.Context, tx *sql.Tx, input *Transaction) (*Transaction, error)
+	TransferWithTx(ctx context.Context, tx *sql.Tx, input *Transaction) (*Transaction, error)
 	Transactions(ctx context.Context, userID int64) ([]*Transaction, error)
 }
 
@@ -44,13 +44,13 @@ func (r *transactionRepository) DepositWithTx(ctx context.Context, tx *sql.Tx, i
 	return input, nil
 }
 
-func (r *transactionRepository) Withdraw(ctx context.Context, input *Transaction) (*Transaction, error) {
+func (r *transactionRepository) WithdrawWithTx(ctx context.Context, tx *sql.Tx, input *Transaction) (*Transaction, error) {
 	query := `
 		INSERT INTO transactions (from_account, amount, type)
 		VALUES ($1, $2, $3)
 		RETURNING id, type, created_at
 	`
-	err := r.db.QueryRowContext(
+	err := tx.QueryRowContext(
 		ctx,
 		query,
 		input.FromAccount,
@@ -68,13 +68,13 @@ func (r *transactionRepository) Withdraw(ctx context.Context, input *Transaction
 	return input, nil
 }
 
-func (r *transactionRepository) Transfer(ctx context.Context, input *Transaction) (*Transaction, error) {
+func (r *transactionRepository) TransferWithTx(ctx context.Context, tx *sql.Tx, input *Transaction) (*Transaction, error) {
 	query := `
 		INSERT INTO transactions (from_account, to_account, amount, type)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, type, created_at
 	`
-	err := r.db.QueryRowContext(
+	err := tx.QueryRowContext(
 		ctx,
 		query,
 		input.FromAccount,

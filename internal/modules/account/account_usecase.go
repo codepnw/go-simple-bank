@@ -12,7 +12,6 @@ const queryTimeout = time.Second * 5
 type AccountUsecase interface {
 	CreateAccount(ctx context.Context, req *accountRequest) (*Account, error)
 	GetAccountByID(ctx context.Context, id int64) (*Account, error)
-	GetAccountByIDWithTx(ctx context.Context, tx *sql.Tx, id int64) (*Account, error)
 	ListAccounts(ctx context.Context, userID int64) ([]*Account, error)
 	UpdateStatusPending(ctx context.Context, id int64) error
 	UpdateStatusApproved(ctx context.Context, id int64) error
@@ -53,13 +52,6 @@ func (uc *accountUsecase) GetAccountByID(ctx context.Context, id int64) (*Accoun
 	return uc.repo.FindByID(ctx, id)
 }
 
-func (uc *accountUsecase) GetAccountByIDWithTx(ctx context.Context, tx *sql.Tx, id int64) (*Account, error) {
-	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
-	defer cancel()
-
-	return uc.repo.FindByIDWithTx(ctx, tx, id)
-}
-
 func (uc *accountUsecase) ListAccounts(ctx context.Context, userID int64) ([]*Account, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
@@ -92,8 +84,8 @@ func (uc *accountUsecase) UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, i
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	if balance <= 0 {
-		return errors.New("balance must be greater than zaro")
+	if balance == 0 {
+		return errors.New("balance must not zaro")
 	}
 
 	return uc.repo.UpdateBalanceWithTx(ctx, tx, id, balance)

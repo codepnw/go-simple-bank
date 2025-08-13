@@ -7,6 +7,7 @@ import (
 	"github.com/codepnw/simple-bank/internal/db"
 	"github.com/codepnw/simple-bank/internal/modules/account"
 	"github.com/codepnw/simple-bank/internal/modules/auth"
+	"github.com/codepnw/simple-bank/internal/modules/transaction"
 	"github.com/codepnw/simple-bank/internal/modules/user"
 	"github.com/gin-gonic/gin"
 )
@@ -65,4 +66,20 @@ func (r *routeConfig) accountRoutes() {
 	account.GET("/:id/pending", accHandler.UpdateStatusPending)
 	account.GET("/:id/approved", accHandler.UpdateStatusApproved)
 	account.GET("/:id/rejected", accHandler.UpdateStatusRejected)
+}
+
+func (r *routeConfig) transactionRoutes() {
+	accRepo := account.NewAccountRepository(r.db)
+	accUsecase := account.NewAccountUsecse(accRepo)
+
+	tranRepo := transaction.NewTransactionRepository(r.db)
+	tranUsecase := transaction.NewTransactionUsecse(tranRepo, accUsecase, r.tx)
+	tranHandler := transaction.NewTransactionHandler(tranUsecase)
+
+	route := r.router.Group("/transactions")
+
+	route.POST("/deposit", tranHandler.Deposit)
+	route.POST("/withdraw", tranHandler.Withdraw)
+	route.POST("/transfer", tranHandler.Transfer)
+	route.GET("/:userID", tranHandler.Transactions)
 }
