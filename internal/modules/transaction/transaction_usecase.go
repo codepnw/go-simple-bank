@@ -56,7 +56,7 @@ func (uc *transactionUsecase) Deposit(ctx context.Context, req *DepositReq) (*Tr
 
 		// Insert Transaction
 		result, err = uc.tranRepo.DepositWithTx(ctx, tx, &Transaction{
-			ToAccount: account.ID,
+			ToAccount: &account.ID,
 			Amount:    req.Amount,
 		})
 		if err != nil {
@@ -98,7 +98,7 @@ func (uc *transactionUsecase) Withdraw(ctx context.Context, req *WithdrawReq) (*
 
 		// Insert Transaction
 		result, err = uc.tranRepo.WithdrawWithTx(ctx, tx, &Transaction{
-			FromAccount: account.ID,
+			FromAccount: &account.ID,
 			Amount:      req.Amount,
 		})
 		if err != nil {
@@ -161,8 +161,8 @@ func (uc *transactionUsecase) Transfer(ctx context.Context, req *TransferReq) (*
 
 		// Insert Transaction
 		result, err = uc.tranRepo.TransferWithTx(ctx, tx, &Transaction{
-			FromAccount: req.FromAccount,
-			ToAccount:   req.ToAccount,
+			FromAccount: &req.FromAccount,
+			ToAccount:   &req.ToAccount,
 			Amount:      req.Amount,
 		})
 		if err != nil {

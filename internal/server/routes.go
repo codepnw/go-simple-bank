@@ -49,8 +49,8 @@ func (r *routeConfig) userRoutes() {
 	user.POST("/", userHandler.CreateUser)
 	user.GET("/:id", userHandler.GetUser)
 	user.GET("/", userHandler.GetUsers)
-	user.PATCH("/", userHandler.UpdateUser)
-	user.DELETE("/", userHandler.DeleteUser)
+	user.PATCH("/:id", userHandler.UpdateUser)
+	user.DELETE("/:id", userHandler.DeleteUser)
 }
 
 func (r *routeConfig) accountRoutes() {
@@ -61,7 +61,7 @@ func (r *routeConfig) accountRoutes() {
 	account := r.router.Group("/accounts")
 
 	account.POST("/", accHandler.CreateAccount)
-	account.GET("/", accHandler.ListAccounts)
+	account.GET("/user/:userID", accHandler.ListAccounts)
 	account.GET("/:id", accHandler.GetAccountByID)
 	account.GET("/:id/pending", accHandler.UpdateStatusPending)
 	account.GET("/:id/approved", accHandler.UpdateStatusApproved)

@@ -106,7 +106,7 @@ func (r *accountRepository) List(ctx context.Context, userID int64) ([]*Account,
 }
 
 func (r *accountRepository) UpdateStatus(ctx context.Context, id int64, status string) error {
-	query := `UPDATE FROM accounts SET status = $1 WHERE id = $2`
+	query := `UPDATE accounts SET status = $1 WHERE id = $2`
 
 	res, err := r.db.ExecContext(ctx, query, status, id)
 	if err != nil {
@@ -127,7 +127,7 @@ func (r *accountRepository) UpdateStatus(ctx context.Context, id int64, status s
 
 func (r *accountRepository) UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, id int64, balance float64) error {
 	query := `
-		UPDATE FROM accounts SET balance = balance + $1 
+		UPDATE accounts SET balance = balance + $1 
 		WHERE id = $2 AND balance + $1 >= 0
 	`
 	res, err := tx.ExecContext(ctx, query, balance, id)

@@ -101,7 +101,7 @@ func (h *accountHandler) UpdateStatusRejected(ctx *gin.Context) {
 		return
 	}
 
-	if err = h.uc.UpdateStatusApproved(ctx, id); err != nil {
+	if err = h.uc.UpdateStatusRejected(ctx, id); err != nil {
 		response.ErrInternalServer(ctx, err)
 		return
 	}
