@@ -3,10 +3,9 @@ package user
 import (
 	"context"
 	"database/sql"
-	"errors"
-)
 
-var ErrUserNotFound = errors.New("user not found")
+	"github.com/codepnw/simple-bank/internal/utils/errs"
+)
 
 type UserRepository interface {
 	Create(ctx context.Context, u *User) (*User, error)
@@ -149,7 +148,7 @@ func (r *userRepository) Update(ctx context.Context, u *User) error {
 	}
 
 	if rows == 0 {
-		return ErrUserNotFound
+		return errs.ErrUserNotFound
 	}
 
 	return nil
@@ -167,7 +166,7 @@ func (r *userRepository) Delete(ctx context.Context, id int64) error {
 	}
 
 	if rows == 0 {
-		return ErrUserNotFound
+		return errs.ErrUserNotFound
 	}
 
 	return nil

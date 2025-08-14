@@ -3,12 +3,12 @@ package transaction
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/codepnw/simple-bank/internal/db"
 	"github.com/codepnw/simple-bank/internal/modules/account"
+	"github.com/codepnw/simple-bank/internal/utils/errs"
 )
 
 const queryTimeout = time.Second * 5
@@ -43,7 +43,7 @@ func (uc *transactionUsecase) Deposit(ctx context.Context, req *DepositReq) (*Tr
 	// Find Account
 	account, err := uc.accUsecase.GetAccountByID(ctx, req.ToAccount)
 	if err != nil {
-		return nil, fmt.Errorf("account not found: %w", err)
+		return nil, errs.ErrAccountNotFound
 	}
 
 	// Tx Transaction
@@ -81,11 +81,11 @@ func (uc *transactionUsecase) Withdraw(ctx context.Context, req *WithdrawReq) (*
 	// Find Account
 	account, err := uc.accUsecase.GetAccountByID(ctx, req.FromAccount)
 	if err != nil {
-		return nil, fmt.Errorf("account not found: %w", err)
+		return nil, errs.ErrAccountNotFound
 	}
 
 	if req.Amount > float64(account.Balance) {
-		return nil, errors.New("amount greater than account balance")
+		return nil, errs.ErrAmountGreaterAccBalance
 	}
 
 	// Tx Transaction
@@ -123,26 +123,26 @@ func (uc *transactionUsecase) Transfer(ctx context.Context, req *TransferReq) (*
 	// Find From Account
 	fromAcc, err := uc.accUsecase.GetAccountByID(ctx, req.FromAccount)
 	if err != nil {
-		return nil, errors.New("account not found")
+		return nil, errs.ErrAccountNotFound
 	}
 
 	// Find To Account
 	toAcc, err := uc.accUsecase.GetAccountByID(ctx, req.ToAccount)
 	if err != nil {
-		return nil, errors.New("account not found")
+		return nil, errs.ErrAccountNotFound
 	}
 
 	if req.FromAccount == req.ToAccount {
-		return nil, errors.New("cannot transfer to the same account")
+		return nil, errs.ErrTranSameAccount
 	}
 
 	if req.Amount <= 0 {
-		return nil, errors.New("amount must be greater than zero")
+		return nil, errs.ErrAmountGreaterThanZero
 	}
 
 	// Check Account Balance
 	if req.Amount > float64(fromAcc.Balance) {
-		return nil, errors.New("amount greater than account balance")
+		return nil, errs.ErrAmountGreaterAccBalance
 	}
 
 	// Tx Transaction

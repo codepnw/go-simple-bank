@@ -3,7 +3,8 @@ package account
 import (
 	"context"
 	"database/sql"
-	"errors"
+
+	"github.com/codepnw/simple-bank/internal/utils/errs"
 )
 
 type AccountRepository interface {
@@ -119,7 +120,7 @@ func (r *accountRepository) UpdateStatus(ctx context.Context, id int64, status s
 	}
 
 	if rows == 0 {
-		return errors.New("account not found")
+		return errs.ErrAccountNotFound
 	}
 
 	return nil
@@ -141,7 +142,7 @@ func (r *accountRepository) UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx,
 	}
 
 	if rows == 0 {
-		return errors.New("account not found")
+		return errs.ErrAccountNotFound
 	}
 
 	return nil

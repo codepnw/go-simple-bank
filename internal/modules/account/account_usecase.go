@@ -3,8 +3,9 @@ package account
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"time"
+
+	"github.com/codepnw/simple-bank/internal/utils/errs"
 )
 
 const queryTimeout = time.Second * 5
@@ -80,15 +81,15 @@ func (uc *accountUsecase) UpdateStatusRejected(ctx context.Context, id int64) er
 	return uc.repo.UpdateStatus(ctx, id, string(StatusRejected))
 }
 
-func (uc *accountUsecase) UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, id int64, balance float64) error {
+func (uc *accountUsecase) UpdateBalanceWithTx(ctx context.Context, tx *sql.Tx, id int64, amount float64) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	if balance == 0 {
-		return errors.New("balance must not zaro")
+	if amount == 0 {
+		return errs.ErrAccountAmountNotZero
 	}
 
-	return uc.repo.UpdateBalanceWithTx(ctx, tx, id, balance)
+	return uc.repo.UpdateBalanceWithTx(ctx, tx, id, amount)
 }
 
 // GetAccountBalance For Admin
