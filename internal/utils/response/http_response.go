@@ -20,6 +20,10 @@ func Success(ctx *gin.Context, data any) {
 	})
 }
 
+func Unauthorized(ctx *gin.Context, msg string) {
+	ctx.JSON(http.StatusUnauthorized, gin.H{"message": msg})
+}
+
 func ErrInternalServer(ctx *gin.Context, err error) {
 	ctx.JSON(http.StatusInternalServerError, gin.H{
 		"success": false,

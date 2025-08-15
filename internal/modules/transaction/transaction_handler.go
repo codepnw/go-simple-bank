@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"github.com/codepnw/simple-bank/internal/modules/user"
 	"github.com/codepnw/simple-bank/internal/utils"
 	"github.com/codepnw/simple-bank/internal/utils/response"
 	"github.com/gin-gonic/gin"
@@ -88,9 +89,25 @@ func (h *transactionHandler) Transfer(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-func (h *transactionHandler) Transactions(ctx *gin.Context) {
-	// TODO: get userID from context later
-	userID, err := utils.GetParamID(ctx, "userID")
+func (h *transactionHandler) TransactionsByCurrentUser(ctx *gin.Context) {
+	u, err := user.CurrentUser(ctx)
+	if err != nil {
+		response.Unauthorized(ctx, err.Error())
+		return
+	}
+
+	// Transactions Usecase
+	result, err := h.uc.Transactions(ctx.Request.Context(), u.ID)
+	if err != nil {
+		response.ErrInternalServer(ctx, err)
+		return
+	}
+
+	response.Success(ctx, result)
+}
+
+func (h *transactionHandler) TransactionsByUserID(ctx *gin.Context) {
+	userID, err := utils.GetParamID(ctx, "id")
 	if err != nil {
 		response.ErrBadRequest(ctx, err)
 		return

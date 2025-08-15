@@ -5,6 +5,7 @@ import (
 
 	"github.com/codepnw/simple-bank/config"
 	"github.com/codepnw/simple-bank/internal/db"
+	"github.com/codepnw/simple-bank/internal/middleware"
 	"github.com/codepnw/simple-bank/internal/modules/account"
 	"github.com/codepnw/simple-bank/internal/modules/auth"
 	"github.com/codepnw/simple-bank/internal/modules/transaction"
@@ -17,6 +18,7 @@ type routeConfig struct {
 	db     *sql.DB
 	tx     *db.Tx
 	cfg    *config.EnvConfig
+	mid    middleware.Auth
 }
 
 func setupRoutes(params *routeConfig) *routeConfig {
@@ -25,9 +27,11 @@ func setupRoutes(params *routeConfig) *routeConfig {
 		db:     params.db,
 		tx:     params.tx,
 		cfg:    params.cfg,
+		mid:    middleware.AuthMiddleware(params.cfg),
 	}
 }
 
+// Route: Auth
 func (r *routeConfig) authRoutes() {
 	userRepo := user.NewUserRepository(r.db)
 	userUsecase := user.NewUserUsecase(userRepo)
@@ -35,39 +39,60 @@ func (r *routeConfig) authRoutes() {
 	authUsecase := auth.NewAuthUsecase(r.cfg, userUsecase)
 	authHandler := auth.NewAuthHandler(authUsecase)
 
-	pub := r.router.Group("/auth")
-	pub.POST("/register", authHandler.Register)
-	pub.POST("/login", authHandler.Login)
+	// Public
+	public := r.router.Group("/auth")
+	{
+		public.POST("/register", authHandler.Register)
+		public.POST("/login", authHandler.Login)
+	}
 }
 
+// Route: Users
 func (r *routeConfig) userRoutes() {
 	userRepo := user.NewUserRepository(r.db)
 	userUsecase := user.NewUserUsecase(userRepo)
 	userHandler := user.NewUserHandler(userUsecase)
 
-	user := r.router.Group("/users")
-	user.POST("/", userHandler.CreateUser)
-	user.GET("/:id", userHandler.GetUser)
-	user.GET("/", userHandler.GetUsers)
-	user.PATCH("/:id", userHandler.UpdateUser)
-	user.DELETE("/:id", userHandler.DeleteUser)
+	// Group: All Role
+	authorized := r.router.Group("/users/profile", r.mid.Authorized())
+	{
+		authorized.GET("/", userHandler.GetProfile)
+		authorized.PATCH("/", userHandler.UpdateProfile)
+	}
+
+	// Group: Admin Role
+	permission := r.router.Group("/users", r.mid.Authorized(), r.mid.Permissions(user.RoleAdmin))
+	{
+		permission.POST("/", userHandler.CreateUser)
+		permission.GET("/", userHandler.GetUsers)
+		permission.GET("/:id", userHandler.GetUser)
+		permission.DELETE("/:id", userHandler.DeleteUser)
+	}
 }
 
+// Route: Accounts
 func (r *routeConfig) accountRoutes() {
 	accRepo := account.NewAccountRepository(r.db)
 	accUsecase := account.NewAccountUsecse(accRepo)
 	accHandler := account.NewAccountHandler(accUsecase)
 
-	account := r.router.Group("/accounts")
+	authorized := r.router.Group("/accounts", r.mid.Authorized())
+	{
+		authorized.POST("/", accHandler.CreateAccount)
+		authorized.GET("/user/:userID", accHandler.ListAccounts)
+		authorized.GET("/:id", accHandler.GetAccountByID)
+	}
 
-	account.POST("/", accHandler.CreateAccount)
-	account.GET("/user/:userID", accHandler.ListAccounts)
-	account.GET("/:id", accHandler.GetAccountByID)
-	account.GET("/:id/pending", accHandler.UpdateStatusPending)
-	account.GET("/:id/approved", accHandler.UpdateStatusApproved)
-	account.GET("/:id/rejected", accHandler.UpdateStatusRejected)
+	// Group: Staff, Admin
+	permission := r.router.Group("/accounts", r.mid.Authorized(), r.mid.Permissions(user.RoleStaff, user.RoleAdmin))
+	{
+		permission.GET("/:id/pending", accHandler.UpdateStatusPending)
+		permission.GET("/:id/approved", accHandler.UpdateStatusApproved)
+		permission.GET("/:id/rejected", accHandler.UpdateStatusRejected)
+	}
 }
 
+// Route: Transactions
 func (r *routeConfig) transactionRoutes() {
 	accRepo := account.NewAccountRepository(r.db)
 	accUsecase := account.NewAccountUsecse(accRepo)
@@ -76,10 +101,23 @@ func (r *routeConfig) transactionRoutes() {
 	tranUsecase := transaction.NewTransactionUsecse(tranRepo, accUsecase, r.tx)
 	tranHandler := transaction.NewTransactionHandler(tranUsecase)
 
-	route := r.router.Group("/transactions")
+	// Public
+	public := r.router.Group("/transactions")
+	{
+		public.POST("/deposit", tranHandler.Deposit)
+	}
 
-	route.POST("/deposit", tranHandler.Deposit)
-	route.POST("/withdraw", tranHandler.Withdraw)
-	route.POST("/transfer", tranHandler.Transfer)
-	route.GET("/:userID", tranHandler.Transactions)
+	// Authorized
+	authorized := r.router.Group("/transactions", r.mid.Authorized())
+	{
+		authorized.POST("/withdraw", tranHandler.Withdraw)
+		authorized.POST("/transfer", tranHandler.Transfer)
+		authorized.GET("/", tranHandler.TransactionsByCurrentUser)
+	}
+
+	// Group: Staff, Admin
+	permission := r.router.Group("/transactions/user", r.mid.Authorized(), r.mid.Permissions(user.RoleStaff, user.RoleAdmin))
+	{
+		permission.GET("/:id", tranHandler.TransactionsByUserID)
+	}
 }
