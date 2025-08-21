@@ -8,7 +8,7 @@ const (
 	StatusRejected accountStatus = "REJECTED"
 )
 
-type accountRequest struct {
+type AccountRequest struct {
 	UserID int64         `json:"user_id"`
 	Name   string        `json:"name"`
 	Status accountStatus `json:"status"`

@@ -6,11 +6,15 @@ import (
 	"fmt"
 )
 
+type TxManager interface {
+	WithTx(ctx context.Context, fn func(tx *sql.Tx) error) error
+}
+
 type Tx struct {
 	db *sql.DB
 }
 
-func InitTx(db *sql.DB) *Tx {
+func InitTx(db *sql.DB) TxManager {
 	if db == nil {
 		panic("db is nil")
 	}
@@ -30,4 +34,12 @@ func (t *Tx) WithTx(ctx context.Context, fn func(tx *sql.Tx) error) error {
 	}
 
 	return tx.Commit()
+}
+
+// TxMock for Test
+type TxMock struct {
+}
+
+func (m *TxMock) WithTx(ctx context.Context, fn func(tx *sql.Tx) error) error {
+	return fn(nil)
 }

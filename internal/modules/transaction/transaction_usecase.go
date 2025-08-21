@@ -23,10 +23,10 @@ type TransactionUsecase interface {
 type transactionUsecase struct {
 	tranRepo   TransasctionRepository
 	accUsecase account.AccountUsecase
-	txManager  *db.Tx
+	txManager  db.TxManager
 }
 
-func NewTransactionUsecse(tranRepo TransasctionRepository, accUsecase account.AccountUsecase, txManager *db.Tx) TransactionUsecase {
+func NewTransactionUsecse(tranRepo TransasctionRepository, accUsecase account.AccountUsecase, txManager db.TxManager) TransactionUsecase {
 	return &transactionUsecase{
 		tranRepo:   tranRepo,
 		accUsecase: accUsecase,

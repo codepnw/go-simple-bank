@@ -15,7 +15,7 @@ func NewAccountHandler(uc AccountUsecase) *accountHandler {
 }
 
 func (h *accountHandler) CreateAccount(ctx *gin.Context) {
-	req := new(accountRequest)
+	req := new(AccountRequest)
 
 	if err := ctx.ShouldBindJSON(req); err != nil {
 		response.ErrBadRequest(ctx, err)

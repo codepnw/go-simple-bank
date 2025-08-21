@@ -11,7 +11,7 @@ import (
 const queryTimeout = time.Second * 5
 
 type AccountUsecase interface {
-	CreateAccount(ctx context.Context, req *accountRequest) (*Account, error)
+	CreateAccount(ctx context.Context, req *AccountRequest) (*Account, error)
 	GetAccountByID(ctx context.Context, id int64) (*Account, error)
 	ListAccounts(ctx context.Context, userID int64) ([]*Account, error)
 	UpdateStatusPending(ctx context.Context, id int64) error
@@ -28,7 +28,7 @@ func NewAccountUsecse(repo AccountRepository) AccountUsecase {
 	return &accountUsecase{repo: repo}
 }
 
-func (uc *accountUsecase) CreateAccount(ctx context.Context, req *accountRequest) (*Account, error) {
+func (uc *accountUsecase) CreateAccount(ctx context.Context, req *AccountRequest) (*Account, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 

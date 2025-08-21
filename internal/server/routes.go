@@ -16,7 +16,7 @@ import (
 type routeConfig struct {
 	router *gin.Engine
 	db     *sql.DB
-	tx     *db.Tx
+	tx     db.TxManager
 	cfg    *config.EnvConfig
 	mid    middleware.Auth
 }
